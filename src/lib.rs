@@ -132,8 +132,14 @@ impl Snake {
     }
 
     pub fn show(&mut self, frame: &mut Frame) -> Result<()> {
+        let mut before = (0, 0);
         for b in &self.body {
-            frame.write(b.0, b.1, String::from("◼"))?;
+            if (b.1 - before.1).abs() == 1 {
+                frame.write(b.0, b.1, String::from("◼"))?;
+            } else {
+                frame.write(b.0, b.1, String::from("◼"))?; //:= should be rectangle
+            }
+            before = b.clone();
         }
         Ok(())
     }

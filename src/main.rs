@@ -1,8 +1,8 @@
-use snake_game::*;
 use std::env::args;
 use std::io::{Read, Result};
 use std::{thread::sleep, time::Duration};
 use termion::async_stdin;
+use tiny_terminal_snake::*;
 
 fn parse_key(buff: &[Option<Result<u8>>; 3]) -> Option<Direction> {
     if buff
@@ -25,8 +25,8 @@ fn parse_key(buff: &[Option<Result<u8>>; 3]) -> Option<Direction> {
 
 fn parse_argv() -> (usize, usize) {
     let mut argv = args();
-
-    match (argv.nth(1), argv.nth(2)) {
+    let _ = argv.next();
+    match (argv.next(), argv.next()) {
         (Some(a), Some(b)) => (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()),
         _ => (10, 20),
     }
@@ -50,7 +50,6 @@ fn main() -> Result<()> {
         count += 1;
         let b = [stdin.next(), stdin.next(), stdin.next()];
         if let Some(Ok(b'q')) = b[0] {
-            a.quit();
             break;
         }
 
@@ -86,5 +85,6 @@ fn main() -> Result<()> {
             }
         }
     }
+    a.quit();
     Ok(())
 }
