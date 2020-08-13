@@ -73,6 +73,7 @@ impl Frame {
         self.points.flush()
     }
 
+    //:= this function should optimise because when the snake is big enough, this function might run a lot times
     pub fn random_point(&mut self) -> (usize, usize) {
         (
             self.rng.gen_range(0, self.row),

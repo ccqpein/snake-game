@@ -35,7 +35,7 @@ fn parse_argv() -> (usize, usize) {
 fn main() -> Result<()> {
     let (row, col) = parse_argv();
     let mut a = Frame::new(row, col);
-    let mut snake = Snake::new((5, 5), Direction::Right, 2); //:= TODO: should random?
+    let mut snake = Snake::new((5, 5), Direction::Right, 2);
 
     let mut food = a.random_point();
     a.write(food.0 as i32, food.1 as i32, String::from("x"))?;
@@ -45,6 +45,7 @@ fn main() -> Result<()> {
     let mut k = Direction::Right;
     snake.show(&mut a).unwrap();
 
+    //:= TODO: should increasing speed
     loop {
         sleep(Duration::from_millis(50));
         count += 1;
