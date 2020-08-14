@@ -1,4 +1,5 @@
 use rand::*;
+use std::collections::HashSet;
 use std::io::{repeat, stdout, Error, ErrorKind, Read, Result, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};
 
@@ -7,6 +8,7 @@ pub struct Frame {
     col: usize,
     points: RawTerminal<Stdout>,
     rng: rand::rngs::ThreadRng,
+    set: HashSet<(usize, usize)>,
 }
 
 impl Frame {
@@ -38,6 +40,10 @@ impl Frame {
             col,
             points: std_out,
             rng: rand::thread_rng(),
+            set: (0..row)
+                .map(|r| (0..col).map(move |c| (r, c)))
+                .flatten()
+                .collect::<HashSet<(usize, usize)>>(),
         }
     }
 
@@ -73,12 +79,20 @@ impl Frame {
         self.points.flush()
     }
 
-    //:= this function should optimise because when the snake is big enough, this function might run a lot times
-    pub fn random_point(&mut self) -> (usize, usize) {
-        (
-            self.rng.gen_range(0, self.row),
-            self.rng.gen_range(0, self.col),
-        )
+    pub fn random_point(&mut self, s: &Snake) -> Result<(usize, usize)> {
+        let a = s
+            .body
+            .iter()
+            .cloned()
+            .map(|a| (a.0 as usize, a.1 as usize))
+            .collect::<HashSet<(usize, usize)>>();
+        let mut pool = self.set.difference(&a);
+
+        let ind = self.rng.gen_range(0, self.row * self.col - s.body.len());
+        match pool.nth(ind) {
+            Some((a, b)) => return Ok((*a, *b)),
+            None => Err(Error::new(ErrorKind::Other, "Panic"))
+        }
     }
 
     pub fn quit(&mut self) {
@@ -122,6 +136,10 @@ impl Snake {
             body: b.iter().map(|x| (x.0, x.1)).collect::<Vec<_>>(),
             dir,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.body.len()
     }
 
     pub fn head(&self) -> (i32, i32) {

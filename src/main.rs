@@ -35,9 +35,9 @@ fn parse_argv() -> (usize, usize) {
 fn main() -> Result<()> {
     let (row, col) = parse_argv();
     let mut a = Frame::new(row, col);
-    let mut snake = Snake::new((5, 5), Direction::Right, 2);
+    let mut snake = Snake::new((1, 1), Direction::Right, 2);
 
-    let mut food = a.random_point();
+    let mut food = a.random_point(&snake).unwrap();
     a.write(food.0 as i32, food.1 as i32, String::from("x"))?;
 
     let mut stdin = async_stdin().bytes();
@@ -56,18 +56,19 @@ fn main() -> Result<()> {
 
         k = if let Some(dd) = parse_key(&b) { dd } else { k };
         if count == 10 {
-            count = 0; // cleant count
+            count = 0; // clean count
             match snake.move_one_step(&k) {
                 Ok(tt) => {
                     if snake.head() != (food.0 as i32, food.1 as i32) {
                         a.write(tt.0, tt.1, String::from("."))?
                     } else {
                         snake.add_tail(tt);
-                        food = a.random_point();
-                        while snake.included(&food) {
-                            //:= TODO: this part need optimise
-                            food = a.random_point();
+                        if snake.len() == row * col {
+                            print!("You win!");
+                            return Ok(());
                         }
+
+                        food = a.random_point(&snake).unwrap();
                         a.write(food.0 as i32, food.1 as i32, String::from("x"))?;
                     }
                 }
