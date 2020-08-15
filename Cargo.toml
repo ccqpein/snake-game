@@ -1,6 +1,6 @@
 [package]
 name = "tiny-terminal-snake"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["ccQpein"]
 edition = "2018"
 description = "tiny snake game in terminal"

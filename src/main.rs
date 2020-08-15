@@ -32,6 +32,44 @@ fn parse_argv() -> (usize, usize) {
     }
 }
 
+struct Speed {
+    /// length of snake
+    last_len: usize,
+    current: usize,
+    /// speed level ~ snake length / last snake length
+    multiples: Vec<f32>,
+}
+
+impl Speed {
+    fn new(s: &Snake) -> Self {
+        Self {
+            last_len: s.len(),
+            current: 10,
+            multiples: vec![4 as f32, 2 as f32, 1.6, 1.4, 1.2, 1.1, 1.1],
+        }
+    }
+
+    fn adjust(&mut self, s: &Snake) {
+        match self.multiples.first() {
+            Some(a) => {
+                if s.len() as f32 / self.last_len as f32 >= *a {
+                    self.current -= 1; // the smaller the faster
+                    self.multiples.drain(..1); // next level
+                    self.last_len = s.len(); // update length
+                };
+            }
+
+            None => (),
+        }
+    }
+}
+
+impl PartialEq<usize> for Speed {
+    fn eq(&self, other: &usize) -> bool {
+        self.current == *other
+    }
+}
+
 fn main() -> Result<()> {
     let (row, col) = parse_argv();
     let mut a = Frame::new(row, col);
@@ -41,11 +79,12 @@ fn main() -> Result<()> {
     a.write(food.0 as i32, food.1 as i32, String::from("x"))?;
 
     let mut stdin = async_stdin().bytes();
-    let mut count = 0;
+    let mut count: usize = 0;
+    let mut spd = Speed::new(&snake);
+
     let mut k = Direction::Right;
     snake.show(&mut a).unwrap();
 
-    //:= TODO: should increasing speed
     loop {
         sleep(Duration::from_millis(50));
         count += 1;
@@ -54,8 +93,9 @@ fn main() -> Result<()> {
             break;
         }
 
-        k = if let Some(dd) = parse_key(&b) { dd } else { k };
-        if count == 10 {
+        k = if let Some(dd) = parse_key(&b) { dd } else { k }; // update input
+
+        if spd == count {
             count = 0; // clean count
             match snake.move_one_step(&k) {
                 Ok(tt) => {
@@ -85,6 +125,7 @@ fn main() -> Result<()> {
                     break;
                 }
             }
+            spd.adjust(&snake);
         }
     }
     a.quit();
