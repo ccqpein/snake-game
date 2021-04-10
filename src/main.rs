@@ -83,7 +83,8 @@ fn main() -> Result<()> {
     let mut spd = Speed::new(&snake);
 
     let mut k = Direction::Right;
-    snake.show(&mut a).unwrap();
+    //snake.show(&mut a).unwrap();
+    a.show(&snake);
 
     loop {
         sleep(Duration::from_millis(50));
@@ -118,7 +119,8 @@ fn main() -> Result<()> {
                     break;
                 }
             };
-            match snake.show(&mut a) {
+            //match snake.show(&mut a) {
+            match a.show(&snake) {
                 Ok(_) => (),
                 Err(_) => {
                     print!("Dead! Sucker\n\r");
