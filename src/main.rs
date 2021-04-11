@@ -1,5 +1,7 @@
-use std::env::args;
+use druid::{AppLauncher, Data, PlatformError, Rect, Size, Widget, WindowDesc};
 use std::io::{Read, Result};
+use std::rc::Rc;
+use std::{cell::RefCell, env::args};
 use std::{thread::sleep, time::Duration};
 use termion::async_stdin;
 use tiny_terminal_snake::*;
@@ -72,7 +74,25 @@ impl PartialEq<usize> for Speed {
 
 fn main() -> Result<()> {
     let (row, col) = parse_argv();
-    let mut a = Frame::new(row, col);
+
+    ////
+    ////
+    ////
+
+    let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
+    AppLauncher::with_window(WindowDesc::new(make_frame_gui(row, col)))
+        .launch(Status {
+            snake,
+            food: (1, 2),
+            speed_defer: 50.,
+            snake_last_len: 3,
+        })
+        .unwrap();
+
+    //////////
+    //////////
+    //////////
+    /*let mut a = Frame::new(row, col);
     let mut snake = Snake::new((1, 1), Direction::Right, 2);
 
     let mut food = a.random_point(&snake).unwrap();
@@ -130,6 +150,6 @@ fn main() -> Result<()> {
             spd.adjust(&snake);
         }
     }
-    a.quit();
+    a.quit();*/
     Ok(())
 }

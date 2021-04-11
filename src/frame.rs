@@ -1,7 +1,8 @@
 use crate::snake::*;
 use rand::*;
-use std::collections::HashSet;
 use std::io::{repeat, stdout, Error, ErrorKind, Read, Result, Stdout, Write};
+use std::time::Duration;
+use std::{cell::RefCell, collections::HashSet};
 use termion::raw::{IntoRawMode, RawTerminal};
 
 use druid::{
@@ -10,11 +11,22 @@ use druid::{
     Point, RenderContext, UpdateCtx,
 };
 use druid::{AppLauncher, Data, PlatformError, Rect, Size, Widget, WindowDesc};
+use std::rc::Rc;
+
+#[derive(Clone, Data)]
+pub struct Status {
+    pub snake: Rc<RefCell<Snake>>,
+    pub food: (usize, usize),
+
+    pub speed_defer: f32,
+
+    pub snake_last_len: usize,
+}
 
 pub struct Frame {
     row: usize,
     col: usize,
-    points: RawTerminal<Stdout>,
+    points: Option<RawTerminal<Stdout>>,
     rng: rand::rngs::ThreadRng,
     set: HashSet<(usize, usize)>,
 }
@@ -46,7 +58,7 @@ impl Frame {
         Self {
             row,
             col,
-            points: std_out,
+            points: Some(std_out),
             rng: rand::thread_rng(),
             set: (0..row)
                 .map(|r| (0..col).map(move |c| (r, c)))
@@ -66,14 +78,14 @@ impl Frame {
 
         if col == 0 {
             write!(
-                self.points,
+                self.points.as_mut().unwrap(),
                 "{}",
                 format_args!("\x1b[s\x1b[{}A\r{}\x1b[u", self.row - row as usize, s)
             )
             .unwrap()
         } else {
             write!(
-                self.points,
+                self.points.as_mut().unwrap(),
                 "{}",
                 format_args!(
                     "\x1b[s\x1b[{}A\r\x1b[{}C{}\x1b[u",
@@ -84,7 +96,7 @@ impl Frame {
             )
             .unwrap()
         };
-        self.points.flush()
+        self.points.as_mut().unwrap().flush()
     }
 
     pub fn random_point(&mut self, s: &Snake) -> Result<(usize, usize)> {
@@ -104,7 +116,7 @@ impl Frame {
     }
 
     pub fn quit(&mut self) {
-        write!(self.points, "{}", termion::cursor::Show).unwrap();
+        write!(self.points.as_mut().unwrap(), "{}", termion::cursor::Show).unwrap();
     }
 
     pub fn show(&mut self, snake: &Snake) -> Result<()> {
@@ -115,4 +127,116 @@ impl Frame {
     }
 }
 
-//impl Widget<Snake> for Frame {}
+impl Widget<Status> for Frame {
+    /// need this function for handling the arrow keys.
+    fn event(&mut self, ctx: &mut EventCtx<'_, '_>, event: &Event, data: &mut Status, env: &Env) {
+        match event {
+            Event::WindowConnected => {
+                ctx.request_paint();
+                // next time update
+                ctx.request_timer(Duration::from_millis(50).mul_f32(data.speed_defer));
+            }
+            Event::Timer(_) => {
+                let tail = data.snake.borrow_mut().move_one_step(&Direction::Right);
+                match tail {
+                    Ok(tt) => {
+                        if data.snake.borrow().head() == (data.food.0 as i32, data.food.1 as i32) {
+                            data.snake.borrow_mut().add_tail(tt);
+                            if data.snake.borrow().len() == self.row * self.col {
+                                //:= TODO: alart you win
+                                //:= end
+                            }
+                            data.food = self.random_point(&data.snake.borrow()).unwrap();
+
+                            //:= need change speed
+                            ctx.request_timer(Duration::from_millis(50).mul_f32(data.speed_defer));
+                        }
+                    }
+                    Err(_) => {
+                        //:= TODO
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn lifecycle(
+        &mut self,
+        _ctx: &mut LifeCycleCtx<'_, '_>,
+        _event: &LifeCycle,
+        _data: &Status,
+        _env: &Env,
+    ) {
+    }
+
+    fn update(&mut self, ctx: &mut UpdateCtx<'_, '_>, old_data: &Status, data: &Status, env: &Env) {
+        ctx.request_paint()
+    }
+
+    fn layout(
+        &mut self,
+        _ctx: &mut LayoutCtx<'_, '_>,
+        _bc: &BoxConstraints,
+        _data: &Status,
+        _env: &Env,
+    ) -> Size {
+        let col = self.col as f64 * 10.;
+        let row = self.row as f64 * 10.;
+        Size::new(row, col)
+    }
+
+    //:= can optimize this part like only update the change part
+    fn paint(&mut self, ctx: &mut PaintCtx<'_, '_, '_>, data: &Status, env: &Env) {
+        let cell_size = Size {
+            width: 10.,
+            height: 10.,
+        };
+
+        for row in 0..self.row {
+            for col in 0..self.col {
+                let point = Point {
+                    x: 10. * row as f64,
+                    y: 10. * col as f64,
+                };
+
+                if data.food == (row, col) {
+                    let rect = Rect::from_origin_size(point, cell_size);
+                    ctx.fill(rect, &Color::rgb8(252, 0, 0))
+                } else {
+                    //:= what if I dont paint this part
+                    let rect = Rect::from_origin_size(point, cell_size);
+                    ctx.fill(rect, &Color::rgb8(252, 252, 252))
+                }
+            }
+        }
+
+        for b in &data.snake.borrow().body {
+            let point = Point {
+                x: 10. * b.0 as f64,
+                y: 10. * b.1 as f64,
+            };
+            let rect = Rect::from_origin_size(point, cell_size);
+            ctx.fill(rect, &Color::rgb8(0, 0, 0))
+        }
+    }
+}
+
+pub fn make_frame_gui(row: usize, col: usize) -> impl Widget<Status> {
+    Flex::column().with_flex_child(
+        Flex::row().with_flex_child(
+            Frame {
+                row,
+                col,
+                points: None,
+                rng: rand::thread_rng(),
+                set: (0..row)
+                    .map(|r| (0..col).map(move |c| (r, c)))
+                    .flatten()
+                    .collect::<HashSet<(usize, usize)>>(),
+            },
+            1.0,
+        ),
+        1.0,
+    )
+}
