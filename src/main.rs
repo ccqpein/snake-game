@@ -80,7 +80,7 @@ fn main() -> Result<()> {
     ////
 
     let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
-    AppLauncher::with_window(WindowDesc::new(make_frame_gui(row, col)))
+    AppLauncher::with_window(WindowDesc::new(Frame::make_frame_gui(row, col)))
         .launch(Status {
             snake,
             food: (1, 2),

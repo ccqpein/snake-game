@@ -125,11 +125,32 @@ impl Frame {
         }
         Ok(())
     }
+
+    pub fn make_frame_gui(row: usize, col: usize) -> Flex<Status> {
+        Flex::column().with_flex_child(
+            Flex::row().with_flex_child(
+                Frame {
+                    row,
+                    col,
+                    points: None,
+                    rng: rand::thread_rng(),
+                    set: (0..row)
+                        .map(|r| (0..col).map(move |c| (r, c)))
+                        .flatten()
+                        .collect::<HashSet<(usize, usize)>>(),
+                },
+                1.0,
+            ),
+            1.0,
+        )
+    }
 }
 
 impl Widget<Status> for Frame {
     /// need this function for handling the arrow keys.
-    fn event(&mut self, ctx: &mut EventCtx<'_, '_>, event: &Event, data: &mut Status, env: &Env) {
+    fn event(&mut self, ctx: &mut EventCtx<'_, '_>, event: &Event, data: &mut Status, _env: &Env) {
+        //:= more event, like keys,...
+        //:= and quit
         match event {
             Event::WindowConnected => {
                 ctx.request_paint();
@@ -150,7 +171,11 @@ impl Widget<Status> for Frame {
 
                             //:= need change speed
                             ctx.request_timer(Duration::from_millis(50).mul_f32(data.speed_defer));
+                        } else {
+                            ctx.request_timer(Duration::from_millis(50).mul_f32(data.speed_defer));
                         }
+
+                        ctx.request_paint();
                     }
                     Err(_) => {
                         //:= TODO
@@ -170,8 +195,13 @@ impl Widget<Status> for Frame {
     ) {
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx<'_, '_>, old_data: &Status, data: &Status, env: &Env) {
-        ctx.request_paint()
+    fn update(
+        &mut self,
+        _ctx: &mut UpdateCtx<'_, '_>,
+        _old_data: &Status,
+        _data: &Status,
+        _env: &Env,
+    ) {
     }
 
     fn layout(
@@ -187,7 +217,7 @@ impl Widget<Status> for Frame {
     }
 
     //:= can optimize this part like only update the change part
-    fn paint(&mut self, ctx: &mut PaintCtx<'_, '_, '_>, data: &Status, env: &Env) {
+    fn paint(&mut self, ctx: &mut PaintCtx<'_, '_, '_>, data: &Status, _env: &Env) {
         let cell_size = Size {
             width: 10.,
             height: 10.,
@@ -220,23 +250,4 @@ impl Widget<Status> for Frame {
             ctx.fill(rect, &Color::rgb8(0, 0, 0))
         }
     }
-}
-
-pub fn make_frame_gui(row: usize, col: usize) -> impl Widget<Status> {
-    Flex::column().with_flex_child(
-        Flex::row().with_flex_child(
-            Frame {
-                row,
-                col,
-                points: None,
-                rng: rand::thread_rng(),
-                set: (0..row)
-                    .map(|r| (0..col).map(move |c| (r, c)))
-                    .flatten()
-                    .collect::<HashSet<(usize, usize)>>(),
-            },
-            1.0,
-        ),
-        1.0,
-    )
 }
