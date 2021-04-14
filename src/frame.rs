@@ -21,6 +21,9 @@ pub struct Status {
     pub speed_defer: f32,
 
     pub snake_last_len: usize,
+
+    pub win: bool,
+    pub lose: bool,
 }
 
 pub struct Frame {
@@ -218,6 +221,7 @@ impl Widget<Status> for Frame {
 
     //:= can optimize this part like only update the change part
     fn paint(&mut self, ctx: &mut PaintCtx<'_, '_, '_>, data: &Status, _env: &Env) {
+        if data.win {}
         let cell_size = Size {
             width: 10.,
             height: 10.,

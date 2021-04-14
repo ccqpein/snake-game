@@ -17,3 +17,6 @@ termion = "1"
 
 # GUI support
 druid = { git = "https://github.com/linebender/druid.git" }
+
+# cli support
+clap = "3.0.0-beta.2"

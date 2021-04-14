@@ -1,5 +1,6 @@
+use clap::Clap;
 use druid::{AppLauncher, Data, PlatformError, Rect, Size, Widget, WindowDesc};
-use std::io::{Read, Result};
+use std::io::{Error, ErrorKind, Read, Result};
 use std::rc::Rc;
 use std::{cell::RefCell, env::args};
 use std::{thread::sleep, time::Duration};
@@ -22,15 +23,6 @@ fn parse_key(buff: &[Option<Result<u8>>; 3]) -> Option<Direction> {
         }
     } else {
         None
-    }
-}
-
-fn parse_argv() -> (usize, usize) {
-    let mut argv = args();
-    let _ = argv.next();
-    match (argv.next(), argv.next()) {
-        (Some(a), Some(b)) => (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()),
-        _ => (10, 20),
     }
 }
 
@@ -72,27 +64,8 @@ impl PartialEq<usize> for Speed {
     }
 }
 
-fn main() -> Result<()> {
-    let (row, col) = parse_argv();
-
-    ////
-    ////
-    ////
-
-    let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
-    AppLauncher::with_window(WindowDesc::new(Frame::make_frame_gui(row, col)))
-        .launch(Status {
-            snake,
-            food: (1, 2),
-            speed_defer: 50.,
-            snake_last_len: 3,
-        })
-        .unwrap();
-
-    //////////
-    //////////
-    //////////
-    /*let mut a = Frame::new(row, col);
+fn running_in_shell(row: usize, col: usize) -> Result<()> {
+    let mut a = Frame::new(row, col);
     let mut snake = Snake::new((1, 1), Direction::Right, 2);
 
     let mut food = a.random_point(&snake).unwrap();
@@ -103,8 +76,8 @@ fn main() -> Result<()> {
     let mut spd = Speed::new(&snake);
 
     let mut k = Direction::Right;
-    //snake.show(&mut a).unwrap();
-    a.show(&snake);
+
+    a.show(&snake)?;
 
     loop {
         sleep(Duration::from_millis(50));
@@ -139,7 +112,7 @@ fn main() -> Result<()> {
                     break;
                 }
             };
-            //match snake.show(&mut a) {
+
             match a.show(&snake) {
                 Ok(_) => (),
                 Err(_) => {
@@ -150,6 +123,30 @@ fn main() -> Result<()> {
             spd.adjust(&snake);
         }
     }
-    a.quit();*/
+    a.quit();
     Ok(())
+}
+
+fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let (row, col) = (args.row, args.col);
+
+    if args.gui {
+        let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
+        AppLauncher::with_window(WindowDesc::new(Frame::make_frame_gui(row, col)))
+            .launch(Status {
+                //:= status can change ofc
+                snake,
+                food: (1, 2),
+                speed_defer: 50.,
+                snake_last_len: 3,
+
+                win: true,
+                lose: false,
+            })
+            .map_err(|e| Error::new(ErrorKind::InvalidData, e))
+    } else {
+        running_in_shell(row, col)
+    }
 }
