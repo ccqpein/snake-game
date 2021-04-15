@@ -7,8 +7,8 @@ use termion::raw::{IntoRawMode, RawTerminal};
 
 use druid::{
     widget::{Align, Flex, Label, Padding},
-    BoxConstraints, Color, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx,
-    Point, RenderContext, UpdateCtx,
+    Application, BoxConstraints, Color, Env, Event, EventCtx, Key, LayoutCtx, LifeCycle,
+    LifeCycleCtx, PaintCtx, Point, RenderContext, UpdateCtx,
 };
 use druid::{AppLauncher, Data, PlatformError, Rect, Size, Widget, WindowDesc};
 use std::rc::Rc;
@@ -24,6 +24,7 @@ pub struct Status {
 
     pub win: bool,
     pub lose: bool,
+    //pub key_being_press: Option<Key<T>>,
 }
 
 pub struct Frame {
@@ -167,8 +168,8 @@ impl Widget<Status> for Frame {
                         if data.snake.borrow().head() == (data.food.0 as i32, data.food.1 as i32) {
                             data.snake.borrow_mut().add_tail(tt);
                             if data.snake.borrow().len() == self.row * self.col {
-                                //:= TODO: alart you win
-                                //:= end
+                                println!("YOU WIN!");
+                                Application::global().quit();
                             }
                             data.food = self.random_point(&data.snake.borrow()).unwrap();
 
@@ -185,6 +186,12 @@ impl Widget<Status> for Frame {
                     }
                 }
             }
+            Event::KeyDown(k) => {
+                //:= BUG: find druid's bug here
+                //data.key_being_press = k.key;
+                println!("press key {:?}", k)
+            }
+            Event::KeyUp(k) => {}
             _ => {}
         }
     }
@@ -219,7 +226,7 @@ impl Widget<Status> for Frame {
         Size::new(row, col)
     }
 
-    //:= can optimize this part like only update the change part
+    //:= TODO: can optimize this part like only update the change part
     fn paint(&mut self, ctx: &mut PaintCtx<'_, '_, '_>, data: &Status, _env: &Env) {
         if data.win {}
         let cell_size = Size {
@@ -238,7 +245,6 @@ impl Widget<Status> for Frame {
                     let rect = Rect::from_origin_size(point, cell_size);
                     ctx.fill(rect, &Color::rgb8(252, 0, 0))
                 } else {
-                    //:= what if I dont paint this part
                     let rect = Rect::from_origin_size(point, cell_size);
                     ctx.fill(rect, &Color::rgb8(252, 252, 252))
                 }
