@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Default, Parser, Debug)]
-#[clap(version = "0.1.8")]
+#[clap(version = "0.2")]
 pub struct Args {
     #[clap(long)]
     pub gui: bool,
