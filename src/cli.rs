@@ -1,6 +1,6 @@
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Default, Clap, Debug)]
+#[derive(Default, Parser, Debug)]
 #[clap(version = "0.1.8")]
 pub struct Args {
     #[clap(long)]

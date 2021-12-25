@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use druid::{AppLauncher, Data, PlatformError, Rect, Size, Widget, WindowDesc};
 use std::io::{Error, ErrorKind, Read, Result};
 use std::rc::Rc;
