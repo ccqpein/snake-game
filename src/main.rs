@@ -132,21 +132,22 @@ fn main() -> Result<()> {
 
     let (row, col) = (args.row, args.col);
 
-    if args.gui {
-        let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
-        AppLauncher::with_window(WindowDesc::new(Frame::make_frame_gui(row, col)))
-            .launch(Status {
-                //:= status can change ofc
-                snake,
-                food: (1, 2),
-                speed_defer: 50.,
-                snake_last_len: 3,
+    // if args.gui {
+    //     let snake = Rc::new(RefCell::new(Snake::new((1, 1), Direction::Right, 2)));
+    //     AppLauncher::with_window(WindowDesc::new(Frame::make_frame_gui(row, col)))
+    //         .launch(Status {
+    //             //:= status can change ofc
+    //             snake,
+    //             food: (1, 2),
+    //             speed_defer: 50.,
+    //             snake_last_len: 3,
 
-                win: true,
-                lose: false,
-            })
-            .map_err(|e| Error::new(ErrorKind::InvalidData, e))
-    } else {
-        running_in_shell(row, col)
-    }
+    //             win: true,
+    //             lose: false,
+    //         })
+    //         .map_err(|e| Error::new(ErrorKind::InvalidData, e))
+    // } else {
+    //     running_in_shell(row, col)
+    // }
+    running_in_shell(row, col)
 }

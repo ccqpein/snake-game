@@ -1,8 +1,8 @@
 [package]
 name = "tiny-terminal-snake"
-version = "0.2"
+version = "0.2.0"
 authors = ["ccQpein"]
-edition = "2018"
+edition = "2021"
 description = "tiny snake game in terminal"
 repository = "https://github.com/ccqpein/snake-game"
 license = "MIT"
@@ -16,7 +16,9 @@ rand = "0.7"
 termion = "1"
 
 # GUI support
-druid = { git = "https://github.com/linebender/druid.git" }
+#druid = { git = "https://github.com/linebender/druid.git" }
+druid = "0.7.0"
 
 # cli support
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
+proc-macro2 = "1.0.34"
