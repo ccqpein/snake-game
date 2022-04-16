@@ -6,4 +6,4 @@
 
 ## Play ##
 
-`tiny-terminal-snake 20 30` 20 rows * 30 cols, the default is 10x20.
+`tiny-terminal-snake -c 20 -r 30` 20 rows * 30 cols, the default is 10x20.
